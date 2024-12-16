@@ -17,7 +17,7 @@ export class StripeWeb extends WebPlugin {
      * Present the Stripe Payment Sheet to the user.
      * @returns A rejected promise with an error message indicating the function is not supported on the web.
      */
-    async presentPaymentSheet() {
+    async createPaymentSheet() {
         throw new Error('Stripe.presentPaymentSheet is not available on the web.');
     }
 }

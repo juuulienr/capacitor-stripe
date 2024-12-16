@@ -14,7 +14,7 @@ npx cap sync
 <docgen-index>
 
 * [`initialize(...)`](#initialize)
-* [`presentPaymentSheet(...)`](#presentpaymentsheet)
+* [`createPaymentSheet(...)`](#createpaymentsheet)
 
 </docgen-index>
 
@@ -38,10 +38,10 @@ Initialize the Stripe plugin with a publishable key.
 --------------------
 
 
-### presentPaymentSheet(...)
+### createPaymentSheet(...)
 
 ```typescript
-presentPaymentSheet(options: { clientSecret: string; merchantDisplayName: string; appearance?: { colors?: { primary?: string; background?: string; componentBackground?: string; componentBorder?: string; primaryText?: string; secondaryText?: string; }; shapes?: { cornerRadius?: number; }; fonts?: { base?: string; heading?: string; }; }; paymentMethodLayout?: 'horizontal' | 'vertical' | 'auto'; }) => Promise<{ status: 'completed' | 'canceled' | 'failed'; }>
+createPaymentSheet(options: { clientSecret: string; merchantDisplayName: string; appearance?: { colors?: { primary?: string; background?: string; componentBackground?: string; componentBorder?: string; primaryText?: string; secondaryText?: string; }; shapes?: { cornerRadius?: number; }; fonts?: { base?: string; heading?: string; }; }; paymentMethodLayout?: 'horizontal' | 'vertical' | 'auto'; }) => Promise<{ status: 'completed' | 'canceled' | 'failed'; }>
 ```
 
 Present the Stripe Payment Sheet to the user.

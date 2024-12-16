@@ -13,7 +13,7 @@ export declare class StripeWeb extends WebPlugin implements StripePlugin {
      * Present the Stripe Payment Sheet to the user.
      * @returns A rejected promise with an error message indicating the function is not supported on the web.
      */
-    presentPaymentSheet(): Promise<{
+    createPaymentSheet(): Promise<{
         status: 'completed' | 'canceled' | 'failed';
     }>;
 }

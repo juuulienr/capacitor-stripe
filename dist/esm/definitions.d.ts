@@ -14,7 +14,7 @@ export interface StripePlugin {
      * @param options - Object containing the client secret and other configuration options.
      * @returns A promise that resolves with the payment status.
      */
-    presentPaymentSheet(options: {
+    createPaymentSheet(options: {
         clientSecret: string;
         merchantDisplayName: string;
         appearance?: {
