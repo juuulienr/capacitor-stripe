@@ -16,5 +16,6 @@ Pod::Spec.new do |s|
   s.swift_version = '5.1'
 
   # Ajout de Stripe iOS SDK
-  s.dependency 'Stripe', '24.1.2'
+  s.dependency 'StripePaymentSheet', '~> 24.1.0'
+  s.dependency 'StripeApplePay', '~> 24.1.0'
 end

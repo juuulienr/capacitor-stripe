@@ -1,50 +1,63 @@
 import Capacitor
-import Stripe
+import StripePaymentSheet
+import StripeApplePay
 
 @objc(StripePlugin)
 public class StripePlugin: CAPPlugin {
-  private var paymentSheet: PaymentSheet?
 
+  /**
+   * Initialize Stripe with a publishable key.
+   */
   @objc func initialize(_ call: CAPPluginCall) {
     guard let publishableKey = call.getString("publishableKey") else {
       call.reject("Publishable key is required")
       return
     }
+
     Stripe.shared.initialize(publishableKey: publishableKey)
-    Locale.preferredLanguages = ["fr"] // Configure la langue en français
     call.resolve(["status": "initialized"])
   }
 
-  @objc func presentPaymentSheet(_ call: CAPPluginCall) {
+  /**
+   * Configure and present the Stripe Payment Sheet with custom parameters.
+   */
+  @objc func createPaymentSheet(_ call: CAPPluginCall) {
     guard let clientSecret = call.getString("clientSecret"),
           let merchantDisplayName = call.getString("merchantDisplayName") else {
       call.reject("Client secret and merchant display name are required")
       return
     }
 
-    let appearance = PaymentSheet.Appearance(
-      colors: PaymentSheet.Appearance.Colors(primary: UIColor.systemBlue),
-      shapes: PaymentSheet.Appearance.Shapes(cornerRadius: 8),
-      fonts: PaymentSheet.Appearance.Fonts(base: UIFont.systemFont(ofSize: 14), heading: UIFont.boldSystemFont(ofSize: 18))
-    )
-
-    let paymentMethodLayout: PaymentSheet.PaymentMethodLayout = .horizontal // Peut être .vertical ou .auto
+    let customerEphemeralKeySecret = call.getString("customerEphemeralKeySecret")
+    let customerId = call.getString("customerId")
+    let countryCode = call.getString("countryCode")
+    let applePayMerchantId = call.getString("applePayMerchantId")
+    let appearance = call.getObject("appearance")
+    let paymentMethodLayout = call.getString("paymentMethodLayout")
 
     DispatchQueue.main.async {
-      self.paymentSheet = Stripe.shared.createPaymentSheet(
+      guard let viewController = self.bridge?.viewController else {
+        call.reject("Unable to find view controller")
+        return
+      }
+
+      Stripe.shared.createPaymentSheet(
         clientSecret: clientSecret,
         merchantDisplayName: merchantDisplayName,
+        customerEphemeralKeySecret: customerEphemeralKeySecret,
+        customerId: customerId,
+        countryCode: countryCode,
+        applePayMerchantId: applePayMerchantId,
         appearance: appearance,
-        paymentMethodLayout: paymentMethodLayout
-      )
-      self.paymentSheet?.present(from: self.bridge?.viewController) { paymentResult in
-        switch paymentResult {
-        case .completed:
-          call.resolve(["status": "completed"])
-        case .canceled:
-          call.resolve(["status": "canceled"])
-        case .failed(let error):
-          call.reject(error.localizedDescription)
+        paymentMethodLayout: paymentMethodLayout,
+        from: viewController
+      ) { status, errorMessage in
+        if status == "completed" {
+          call.resolve(["status": status])
+        } else if status == "failed" {
+          call.reject(errorMessage ?? "An unknown error occurred")
+        } else {
+          call.resolve(["status": status])
         }
       }
     }
