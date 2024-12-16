@@ -1,6 +1,6 @@
 import Foundation
 import StripePaymentSheet
-import StripeApplePay
+import UIKit
 
 @objc public class Stripe: NSObject {
   @objc public static let shared = Stripe()
@@ -18,10 +18,6 @@ import StripeApplePay
   @objc public func createPaymentSheet(
     clientSecret: String,
     merchantDisplayName: String,
-    customerEphemeralKeySecret: String?,
-    customerId: String?,
-    countryCode: String?,
-    applePayMerchantId: String?,
     appearance: [String: Any]?,
     paymentMethodLayout: String?,
     from viewController: UIViewController,
@@ -29,16 +25,6 @@ import StripeApplePay
   ) {
     var configuration = PaymentSheet.Configuration()
     configuration.merchantDisplayName = merchantDisplayName
-
-    // Customer configuration (if provided)
-    if let customerId = customerId, let customerEphemeralKeySecret = customerEphemeralKeySecret {
-      configuration.customer = .init(id: customerId, ephemeralKeySecret: customerEphemeralKeySecret)
-    }
-
-    // Apple Pay configuration (if enabled)
-    if let applePayMerchantId = applePayMerchantId {
-      configuration.applePay = .init(merchantId: applePayMerchantId)
-    }
 
     // Appearance configuration (if provided)
     if let appearanceOptions = appearance {
@@ -55,11 +41,6 @@ import StripeApplePay
       default:
         configuration.paymentMethodLayout = .automatic
       }
-    }
-
-    // Country code configuration (if provided)
-    if let countryCode = countryCode {
-      configuration.applePay?.merchantCountryCode = countryCode
     }
 
     // Create and present the PaymentSheet
@@ -80,27 +61,47 @@ import StripeApplePay
    * Helper method to create a PaymentSheet.Appearance from provided options.
    */
   private func createAppearance(from options: [String: Any]) -> PaymentSheet.Appearance {
-    var colors = PaymentSheet.Appearance.Colors()
-    if let primary = options["colors"] as? [String: String], let primaryColor = primary["primary"] {
-      colors.primary = UIColor(hex: primaryColor)
-    }
-    if let background = options["colors"] as? [String: String], let backgroundColor = background["background"] {
-      colors.background = UIColor(hex: backgroundColor)
+    var appearance = PaymentSheet.Appearance()
+
+    // Configure colors
+    if let colors = options["colors"] as? [String: String] {
+      if let primaryColor = colors["primary"] {
+        appearance.colors.primary = UIColor(hex: primaryColor)
+      }
+      if let backgroundColor = colors["background"] {
+        appearance.colors.background = UIColor(hex: backgroundColor)
+      }
     }
 
-    var shapes = PaymentSheet.Appearance.Shapes()
-    if let cornerRadius = options["shapes"] as? [String: CGFloat], let radius = cornerRadius["cornerRadius"] {
-      shapes.cornerRadius = radius
+    // Configure corner radius
+    if let shapes = options["shapes"] as? [String: CGFloat], let cornerRadius = shapes["cornerRadius"] {
+      appearance.cornerRadius = cornerRadius
     }
 
-    var fonts = PaymentSheet.Appearance.Fonts()
-    if let fontBase = options["fonts"] as? [String: String], let baseFont = fontBase["base"] {
-      fonts.base = UIFont(name: baseFont, size: 14)
-    }
-    if let fontHeading = options["fonts"] as? [String: String], let headingFont = fontHeading["heading"] {
-      fonts.heading = UIFont(name: headingFont, size: 20)
+    // Configure fonts
+    if let fonts = options["fonts"] as? [String: String], let baseFont = fonts["base"] {
+      appearance.font.base = UIFont(name: baseFont, size: 14) ?? UIFont.systemFont(ofSize: 14)
     }
 
-    return PaymentSheet.Appearance(colors: colors, shapes: shapes, fonts: fonts)
+    return appearance
+  }
+}
+
+/**
+ * Extension for UIColor to support hexadecimal strings.
+ */
+extension UIColor {
+  convenience init(hex: String) {
+    var hexSanitized = hex.trimmingCharacters(in: .whitespacesAndNewlines)
+    hexSanitized = hexSanitized.replacingOccurrences(of: "#", with: "")
+
+    var rgb: UInt64 = 0
+    Scanner(string: hexSanitized).scanHexInt64(&rgb)
+
+    let red = CGFloat((rgb & 0xFF0000) >> 16) / 255.0
+    let green = CGFloat((rgb & 0x00FF00) >> 8) / 255.0
+    let blue = CGFloat(rgb & 0x0000FF) / 255.0
+
+    self.init(red: red, green: green, blue: blue, alpha: 1.0)
   }
 }

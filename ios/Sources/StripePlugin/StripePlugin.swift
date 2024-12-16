@@ -1,20 +1,28 @@
 import Capacitor
-import StripePaymentSheet
-import StripeApplePay
+import Foundation
 
+/// Capacitor Plugin pour gérer l'intégration de Stripe
 @objc(StripePlugin)
-public class StripePlugin: CAPPlugin {
+public class StripePlugin: CAPPlugin, CAPBridgedPlugin {
+  public let identifier = "StripePlugin"
+  public let jsName = "Stripe"
+  public let pluginMethods: [CAPPluginMethod] = [
+    CAPPluginMethod(name: "initialize", returnType: CAPPluginReturnPromise),
+    CAPPluginMethod(name: "createPaymentSheet", returnType: CAPPluginReturnPromise),
+  ]
+
+  private let implementation = Stripe()
 
   /**
    * Initialize Stripe with a publishable key.
    */
   @objc func initialize(_ call: CAPPluginCall) {
     guard let publishableKey = call.getString("publishableKey") else {
-      call.reject("Publishable key is required")
+      call.reject("Missing publishable key")
       return
     }
 
-    Stripe.shared.initialize(publishableKey: publishableKey)
+    implementation.initialize(publishableKey: publishableKey)
     call.resolve(["status": "initialized"])
   }
 
@@ -24,30 +32,22 @@ public class StripePlugin: CAPPlugin {
   @objc func createPaymentSheet(_ call: CAPPluginCall) {
     guard let clientSecret = call.getString("clientSecret"),
           let merchantDisplayName = call.getString("merchantDisplayName") else {
-      call.reject("Client secret and merchant display name are required")
+      call.reject("Missing clientSecret or merchantDisplayName")
       return
     }
 
-    let customerEphemeralKeySecret = call.getString("customerEphemeralKeySecret")
-    let customerId = call.getString("customerId")
-    let countryCode = call.getString("countryCode")
-    let applePayMerchantId = call.getString("applePayMerchantId")
     let appearance = call.getObject("appearance")
     let paymentMethodLayout = call.getString("paymentMethodLayout")
 
     DispatchQueue.main.async {
       guard let viewController = self.bridge?.viewController else {
-        call.reject("Unable to find view controller")
+        call.reject("Unable to access viewController")
         return
       }
 
-      Stripe.shared.createPaymentSheet(
+      self.implementation.createPaymentSheet(
         clientSecret: clientSecret,
         merchantDisplayName: merchantDisplayName,
-        customerEphemeralKeySecret: customerEphemeralKeySecret,
-        customerId: customerId,
-        countryCode: countryCode,
-        applePayMerchantId: applePayMerchantId,
         appearance: appearance,
         paymentMethodLayout: paymentMethodLayout,
         from: viewController
