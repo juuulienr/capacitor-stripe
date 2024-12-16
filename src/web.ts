@@ -1,10 +1,27 @@
 import { WebPlugin } from '@capacitor/core';
-
-import type { StripePlugin } from './definitions';
+import { StripePlugin } from './definitions';
 
 export class StripeWeb extends WebPlugin implements StripePlugin {
-  async echo(options: { value: string }): Promise<{ value: string }> {
-    console.log('ECHO', options);
-    return options;
+  constructor() {
+    super({
+      name: 'Stripe',
+      platforms: ['web'],
+    });
+  }
+
+  /**
+   * Initialize Stripe with the publishable key.
+   * @returns A rejected promise with an error message indicating the function is not supported on the web.
+   */
+  async initialize(): Promise<{ status: string }> {
+    throw new Error('Stripe.initialize is not available on the web.');
+  }
+
+  /**
+   * Present the Stripe Payment Sheet to the user.
+   * @returns A rejected promise with an error message indicating the function is not supported on the web.
+   */
+  async presentPaymentSheet(): Promise<{ status: 'completed' | 'canceled' | 'failed' }> {
+    throw new Error('Stripe.presentPaymentSheet is not available on the web.');
   }
 }

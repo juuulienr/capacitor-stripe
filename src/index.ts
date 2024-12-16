@@ -1,5 +1,4 @@
 import { registerPlugin } from '@capacitor/core';
-
 import type { StripePlugin } from './definitions';
 
 const Stripe = registerPlugin<StripePlugin>('Stripe', {

@@ -1,23 +1,52 @@
-import Foundation
 import Capacitor
+import Stripe
 
-/**
- * Please read the Capacitor iOS Plugin Development Guide
- * here: https://capacitorjs.com/docs/plugins/ios
- */
 @objc(StripePlugin)
-public class StripePlugin: CAPPlugin, CAPBridgedPlugin {
-    public let identifier = "StripePlugin"
-    public let jsName = "Stripe"
-    public let pluginMethods: [CAPPluginMethod] = [
-        CAPPluginMethod(name: "echo", returnType: CAPPluginReturnPromise)
-    ]
-    private let implementation = Stripe()
+public class StripePlugin: CAPPlugin {
+  private var paymentSheet: PaymentSheet?
 
-    @objc func echo(_ call: CAPPluginCall) {
-        let value = call.getString("value") ?? ""
-        call.resolve([
-            "value": implementation.echo(value)
-        ])
+  @objc func initialize(_ call: CAPPluginCall) {
+    guard let publishableKey = call.getString("publishableKey") else {
+      call.reject("Publishable key is required")
+      return
     }
+    Stripe.shared.initialize(publishableKey: publishableKey)
+    Locale.preferredLanguages = ["fr"] // Configure la langue en français
+    call.resolve(["status": "initialized"])
+  }
+
+  @objc func presentPaymentSheet(_ call: CAPPluginCall) {
+    guard let clientSecret = call.getString("clientSecret"),
+          let merchantDisplayName = call.getString("merchantDisplayName") else {
+      call.reject("Client secret and merchant display name are required")
+      return
+    }
+
+    let appearance = PaymentSheet.Appearance(
+      colors: PaymentSheet.Appearance.Colors(primary: UIColor.systemBlue),
+      shapes: PaymentSheet.Appearance.Shapes(cornerRadius: 8),
+      fonts: PaymentSheet.Appearance.Fonts(base: UIFont.systemFont(ofSize: 14), heading: UIFont.boldSystemFont(ofSize: 18))
+    )
+
+    let paymentMethodLayout: PaymentSheet.PaymentMethodLayout = .horizontal // Peut être .vertical ou .auto
+
+    DispatchQueue.main.async {
+      self.paymentSheet = Stripe.shared.createPaymentSheet(
+        clientSecret: clientSecret,
+        merchantDisplayName: merchantDisplayName,
+        appearance: appearance,
+        paymentMethodLayout: paymentMethodLayout
+      )
+      self.paymentSheet?.present(from: self.bridge?.viewController) { paymentResult in
+        switch paymentResult {
+        case .completed:
+          call.resolve(["status": "completed"])
+        case .canceled:
+          call.resolve(["status": "canceled"])
+        case .failed(let error):
+          call.reject(error.localizedDescription)
+        }
+      }
+    }
+  }
 }

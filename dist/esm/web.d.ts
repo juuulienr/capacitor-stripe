@@ -1,9 +1,19 @@
 import { WebPlugin } from '@capacitor/core';
-import type { StripePlugin } from './definitions';
+import { StripePlugin } from './definitions';
 export declare class StripeWeb extends WebPlugin implements StripePlugin {
-    echo(options: {
-        value: string;
-    }): Promise<{
-        value: string;
+    constructor();
+    /**
+     * Initialize Stripe with the publishable key.
+     * @returns A rejected promise with an error message indicating the function is not supported on the web.
+     */
+    initialize(): Promise<{
+        status: string;
+    }>;
+    /**
+     * Present the Stripe Payment Sheet to the user.
+     * @returns A rejected promise with an error message indicating the function is not supported on the web.
+     */
+    presentPaymentSheet(): Promise<{
+        status: 'completed' | 'canceled' | 'failed';
     }>;
 }

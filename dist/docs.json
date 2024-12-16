@@ -6,20 +6,54 @@
     "tags": [],
     "methods": [
       {
-        "name": "echo",
-        "signature": "(options: { value: string; }) => Promise<{ value: string; }>",
+        "name": "initialize",
+        "signature": "(options: { publishableKey: string; }) => Promise<{ status: string; }>",
         "parameters": [
           {
             "name": "options",
-            "docs": "",
-            "type": "{ value: string; }"
+            "docs": "- Object containing the publishable key.",
+            "type": "{ publishableKey: string; }"
           }
         ],
-        "returns": "Promise<{ value: string; }>",
-        "tags": [],
-        "docs": "",
+        "returns": "Promise<{ status: string; }>",
+        "tags": [
+          {
+            "name": "param",
+            "text": "options - Object containing the publishable key."
+          },
+          {
+            "name": "returns",
+            "text": "A promise that resolves with the status of the initialization."
+          }
+        ],
+        "docs": "Initialize the Stripe plugin with a publishable key.",
         "complexTypes": [],
-        "slug": "echo"
+        "slug": "initialize"
+      },
+      {
+        "name": "presentPaymentSheet",
+        "signature": "(options: { clientSecret: string; merchantDisplayName: string; appearance?: { colors?: { primary?: string; background?: string; componentBackground?: string; componentBorder?: string; primaryText?: string; secondaryText?: string; }; shapes?: { cornerRadius?: number; }; fonts?: { base?: string; heading?: string; }; }; paymentMethodLayout?: 'horizontal' | 'vertical' | 'auto'; }) => Promise<{ status: 'completed' | 'canceled' | 'failed'; }>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "- Object containing the client secret and other configuration options.",
+            "type": "{ clientSecret: string; merchantDisplayName: string; appearance?: { colors?: { primary?: string | undefined; background?: string | undefined; componentBackground?: string | undefined; componentBorder?: string | undefined; primaryText?: string | undefined; secondaryText?: string | undefined; } | undefined; shapes?: { cornerRadius?: number | undefined; } | undefined; fonts?: { base?: string | undefined; heading?: string | undefined; } | undefined; } | undefined; paymentMethodLayout?: 'horizontal' | 'vertical' | 'auto' | undefined; }"
+          }
+        ],
+        "returns": "Promise<{ status: 'completed' | 'canceled' | 'failed'; }>",
+        "tags": [
+          {
+            "name": "param",
+            "text": "options - Object containing the client secret and other configuration options."
+          },
+          {
+            "name": "returns",
+            "text": "A promise that resolves with the payment status."
+          }
+        ],
+        "docs": "Present the Stripe Payment Sheet to the user.",
+        "complexTypes": [],
+        "slug": "presentpaymentsheet"
       }
     ],
     "properties": []
