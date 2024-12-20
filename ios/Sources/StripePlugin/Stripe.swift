@@ -18,6 +18,10 @@ import UIKit
   @objc public func createPaymentSheet(
     clientSecret: String,
     merchantDisplayName: String,
+    customerEphemeralKeySecret: String?,
+    customerId: String?,
+    countryCode: String?,
+    applePayMerchantId: String?,
     appearance: [String: Any]?,
     paymentMethodLayout: String?,
     from viewController: UIViewController,
@@ -26,12 +30,27 @@ import UIKit
     var configuration = PaymentSheet.Configuration()
     configuration.merchantDisplayName = merchantDisplayName
 
-    // Appearance configuration (if provided)
+    // Forcer le mode clair
+    configuration.style = .alwaysLight
+
+    // Customer configuration
+    if let customerEphemeralKeySecret = customerEphemeralKeySecret,
+       let customerId = customerId {
+      configuration.customer = .init(id: customerId, ephemeralKeySecret: customerEphemeralKeySecret)
+    }
+
+    // Apple Pay configuration
+    if let countryCode = countryCode,
+       let applePayMerchantId = applePayMerchantId {
+      configuration.applePay = .init(merchantId: applePayMerchantId, merchantCountryCode: countryCode)
+    }
+
+    // Appearance configuration
     if let appearanceOptions = appearance {
       configuration.appearance = createAppearance(from: appearanceOptions)
     }
 
-    // Payment method layout (if provided)
+    // Payment method layout
     if let layout = paymentMethodLayout {
       switch layout {
       case "horizontal":
@@ -64,22 +83,20 @@ import UIKit
     var appearance = PaymentSheet.Appearance()
 
     // Configure colors
-    if let colors = options["colors"] as? [String: String] {
-      if let primaryColor = colors["primary"] {
-        appearance.colors.primary = UIColor(hex: primaryColor)
-      }
-      if let backgroundColor = colors["background"] {
-        appearance.colors.background = UIColor(hex: backgroundColor)
-      }
+    if let colors = options["colors"] as? [String: String],
+       let backgroundColor = colors["background"] {
+      appearance.colors.background = UIColor(hex: backgroundColor)
     }
 
     // Configure corner radius
-    if let shapes = options["shapes"] as? [String: CGFloat], let cornerRadius = shapes["cornerRadius"] {
+    if let shapes = options["shapes"] as? [String: CGFloat],
+       let cornerRadius = shapes["cornerRadius"] {
       appearance.cornerRadius = cornerRadius
     }
 
     // Configure fonts
-    if let fonts = options["fonts"] as? [String: String], let baseFont = fonts["base"] {
+    if let fonts = options["fonts"] as? [String: String],
+       let baseFont = fonts["base"] {
       appearance.font.base = UIFont(name: baseFont, size: 14) ?? UIFont.systemFont(ofSize: 14)
     }
 
