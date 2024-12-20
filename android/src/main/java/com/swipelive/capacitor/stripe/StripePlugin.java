@@ -8,7 +8,7 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.stripe.android.paymentsheet.PaymentSheet;
-import com.stripe.android.paymentsheet.model.PaymentSheetConfiguration;
+import com.stripe.android.paymentsheet.PaymentSheetResult;
 
 @CapacitorPlugin(name = "Stripe")
 public class StripePlugin extends Plugin {
@@ -44,22 +44,10 @@ public class StripePlugin extends Plugin {
 
     Activity activity = getActivity();
 
-    PaymentSheet.Configuration configuration = new PaymentSheet.Configuration(
-      merchantDisplayName
-    );
+    PaymentSheet.Configuration configuration = new PaymentSheet.Configuration(merchantDisplayName);
 
-    stripe.presentPaymentSheet(configuration, clientSecret, result -> {
-      JSObject response = new JSObject();
-      if (result instanceof PaymentSheetResult.Completed) {
-        response.put("status", "completed");
-        call.resolve(response);
-      } else if (result instanceof PaymentSheetResult.Canceled) {
-        response.put("status", "canceled");
-        call.resolve(response);
-      } else if (result instanceof PaymentSheetResult.Failed) {
-        response.put("status", "failed");
-        call.reject(((PaymentSheetResult.Failed) result).getError().getMessage());
-      }
-    });
+    stripe.createPaymentSheet(activity, clientSecret, configuration); // Appel correct à la méthode
+
+    call.resolve(new JSObject().put("status", "payment_sheet_presented"));
   }
 }
