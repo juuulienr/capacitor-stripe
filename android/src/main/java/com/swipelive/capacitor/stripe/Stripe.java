@@ -1,18 +1,18 @@
 package com.swipelive.capacitor.stripe;
 
-import android.app.Activity;
 import android.content.Context;
-import android.util.Log;
 
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.activity.ComponentActivity;
+import androidx.lifecycle.Lifecycle;
 
 import com.stripe.android.PaymentConfiguration;
 import com.stripe.android.paymentsheet.PaymentSheet;
 import com.stripe.android.paymentsheet.PaymentSheetResult;
 
 public class Stripe {
-  private final Context context;
   private PaymentSheet paymentSheet;
+  private PaymentSheetResultCallback resultCallback;
+  private final Context context;
 
   public Stripe(Context context) {
     this.context = context;
@@ -23,26 +23,29 @@ public class Stripe {
   }
 
   public void createPaymentSheet(
-          Activity activity,
+          ComponentActivity activity,
           String clientSecret,
-          PaymentSheet.Configuration configuration
+          PaymentSheet.Configuration configuration,
+          PaymentSheetResultCallback callback
   ) {
-    if (!(activity instanceof AppCompatActivity)) {
-      throw new IllegalArgumentException("Activity must extend AppCompatActivity");
+    resultCallback = callback;
+
+    // Vérifie si le LifecycleOwner est dans un état correct avant d'ajouter des observateurs
+    if (activity.getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
+      paymentSheet = new PaymentSheet(activity, result -> {
+        if (resultCallback != null) {
+          resultCallback.onPaymentResult(result);
+        }
+      });
+
+      // Appelle `presentWithPaymentIntent` dans le thread principal
+      activity.runOnUiThread(() -> paymentSheet.presentWithPaymentIntent(clientSecret, configuration));
+    } else {
+      throw new IllegalStateException("Activity is not in a valid lifecycle state for PaymentSheet initialization.");
     }
+  }
 
-    AppCompatActivity appCompatActivity = (AppCompatActivity) activity;
-
-    paymentSheet = new PaymentSheet(appCompatActivity, result -> {
-      if (result instanceof PaymentSheetResult.Completed) {
-        Log.i("Stripe", "Payment completed");
-      } else if (result instanceof PaymentSheetResult.Canceled) {
-        Log.i("Stripe", "Payment canceled");
-      } else if (result instanceof PaymentSheetResult.Failed) {
-        Log.e("Stripe", "Payment failed", ((PaymentSheetResult.Failed) result).getError());
-      }
-    });
-
-    paymentSheet.presentWithPaymentIntent(clientSecret, configuration);
+  public interface PaymentSheetResultCallback {
+    void onPaymentResult(PaymentSheetResult result);
   }
 }

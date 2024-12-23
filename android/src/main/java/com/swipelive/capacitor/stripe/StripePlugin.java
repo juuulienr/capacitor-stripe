@@ -1,6 +1,6 @@
 package com.swipelive.capacitor.stripe;
 
-import android.app.Activity;
+import androidx.activity.ComponentActivity;
 
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -42,12 +42,27 @@ public class StripePlugin extends Plugin {
       return;
     }
 
-    Activity activity = getActivity();
+    ComponentActivity activity = (ComponentActivity) getActivity();
 
     PaymentSheet.Configuration configuration = new PaymentSheet.Configuration(merchantDisplayName);
 
-    stripe.createPaymentSheet(activity, clientSecret, configuration);
-
-    call.resolve(new JSObject().put("status", "payment_sheet_presented"));
+    try {
+      stripe.createPaymentSheet(activity, clientSecret, configuration, result -> {
+        JSObject response = new JSObject();
+        if (result instanceof PaymentSheetResult.Completed) {
+          response.put("status", "completed");
+          call.resolve(response);
+        } else if (result instanceof PaymentSheetResult.Canceled) {
+          response.put("status", "canceled");
+          call.resolve(response);
+        } else if (result instanceof PaymentSheetResult.Failed) {
+          response.put("status", "failed");
+          response.put("error", ((PaymentSheetResult.Failed) result).getError().getLocalizedMessage());
+          call.reject("Payment failed", response);
+        }
+      });
+    } catch (IllegalStateException e) {
+      call.reject("Invalid lifecycle state for PaymentSheet initialization", e);
+    }
   }
 }
