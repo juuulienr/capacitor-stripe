@@ -3,7 +3,6 @@ ext {
     androidxAppCompatVersion = project.hasProperty('androidxAppCompatVersion') ? rootProject.ext.androidxAppCompatVersion : '1.6.1'
     androidxJunitVersion = project.hasProperty('androidxJunitVersion') ? rootProject.ext.androidxJunitVersion : '1.1.5'
     androidxEspressoCoreVersion = project.hasProperty('androidxEspressoCoreVersion') ? rootProject.ext.androidxEspressoCoreVersion : '3.5.1'
-    stripeAndroidVersion = '21.2.1' // Version du SDK Stripe Android
 }
 
 buildscript {
@@ -54,8 +53,8 @@ dependencies {
     implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
     
     // Dépendance Stripe PaymentSheet SDK
-    implementation "com.stripe:stripe-android:$stripeAndroidVersion"
-    
+    implementation "com.stripe:stripe-android:21.2.1"
+
     // Tests unitaires et Android
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"

@@ -46,7 +46,7 @@ public class StripePlugin extends Plugin {
 
     PaymentSheet.Configuration configuration = new PaymentSheet.Configuration(merchantDisplayName);
 
-    stripe.createPaymentSheet(activity, clientSecret, configuration); // Appel correct à la méthode
+    stripe.createPaymentSheet(activity, clientSecret, configuration);
 
     call.resolve(new JSObject().put("status", "payment_sheet_presented"));
   }
