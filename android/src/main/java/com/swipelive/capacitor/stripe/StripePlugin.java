@@ -1,6 +1,6 @@
 package com.swipelive.capacitor.stripe;
 
-import androidx.activity.ComponentActivity;
+import android.app.Activity;
 
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -10,14 +10,15 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 import com.stripe.android.paymentsheet.PaymentSheet;
 import com.stripe.android.paymentsheet.PaymentSheetResult;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 @CapacitorPlugin(name = "Stripe")
 public class StripePlugin extends Plugin {
-
   private Stripe stripe;
 
   @Override
   public void load() {
-    stripe = new Stripe(getContext());
+    stripe = new Stripe();
   }
 
   @PluginMethod
@@ -28,7 +29,14 @@ public class StripePlugin extends Plugin {
       return;
     }
 
-    stripe.initialize(publishableKey);
+    Activity activity = getActivity();
+    if (!(activity instanceof AppCompatActivity)) {
+      call.reject("Activity must extend AppCompatActivity");
+      return;
+    }
+
+    AppCompatActivity appCompatActivity = (AppCompatActivity) activity;
+    stripe.initialize(appCompatActivity, publishableKey);
     call.resolve(new JSObject().put("status", "initialized"));
   }
 
@@ -42,12 +50,11 @@ public class StripePlugin extends Plugin {
       return;
     }
 
-    ComponentActivity activity = (ComponentActivity) getActivity();
-
     PaymentSheet.Configuration configuration = new PaymentSheet.Configuration(merchantDisplayName);
 
-    try {
-      stripe.createPaymentSheet(activity, clientSecret, configuration, result -> {
+    stripe.presentPaymentSheet(clientSecret, configuration, new Stripe.PaymentSheetResultCallback() {
+      @Override
+      public void onSuccess(PaymentSheetResult result) {
         JSObject response = new JSObject();
         if (result instanceof PaymentSheetResult.Completed) {
           response.put("status", "completed");
@@ -57,12 +64,15 @@ public class StripePlugin extends Plugin {
           call.resolve(response);
         } else if (result instanceof PaymentSheetResult.Failed) {
           response.put("status", "failed");
-          response.put("error", ((PaymentSheetResult.Failed) result).getError().getLocalizedMessage());
+          response.put("error", ((PaymentSheetResult.Failed) result).getError().toString());
           call.reject("Payment failed", response);
         }
-      });
-    } catch (IllegalStateException e) {
-      call.reject("Invalid lifecycle state for PaymentSheet initialization", e);
-    }
+      }
+
+      @Override
+      public void onError(String error) {
+        call.reject(error);
+      }
+    });
   }
 }

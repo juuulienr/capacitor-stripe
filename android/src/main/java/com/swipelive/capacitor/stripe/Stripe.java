@@ -1,9 +1,9 @@
 package com.swipelive.capacitor.stripe;
 
-import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 
-import androidx.activity.ComponentActivity;
-import androidx.lifecycle.Lifecycle;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.stripe.android.PaymentConfiguration;
 import com.stripe.android.paymentsheet.PaymentSheet;
@@ -11,41 +11,28 @@ import com.stripe.android.paymentsheet.PaymentSheetResult;
 
 public class Stripe {
   private PaymentSheet paymentSheet;
-  private PaymentSheetResultCallback resultCallback;
-  private final Context context;
 
-  public Stripe(Context context) {
-    this.context = context;
-  }
-
-  public void initialize(String publishableKey) {
-    PaymentConfiguration.init(context, publishableKey);
-  }
-
-  public void createPaymentSheet(
-          ComponentActivity activity,
-          String clientSecret,
-          PaymentSheet.Configuration configuration,
-          PaymentSheetResultCallback callback
-  ) {
-    resultCallback = callback;
-
-    // Vérifie si le LifecycleOwner est dans un état correct avant d'ajouter des observateurs
-    if (activity.getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
+  public void initialize(AppCompatActivity activity, String publishableKey) {
+    new Handler(Looper.getMainLooper()).post(() -> {
+      PaymentConfiguration.init(activity, publishableKey);
       paymentSheet = new PaymentSheet(activity, result -> {
-        if (resultCallback != null) {
-          resultCallback.onPaymentResult(result);
-        }
+        // Callback will be handled in the Plugin
       });
+    });
+  }
 
-      // Appelle `presentWithPaymentIntent` dans le thread principal
-      activity.runOnUiThread(() -> paymentSheet.presentWithPaymentIntent(clientSecret, configuration));
-    } else {
-      throw new IllegalStateException("Activity is not in a valid lifecycle state for PaymentSheet initialization.");
-    }
+  public void presentPaymentSheet(String clientSecret, PaymentSheet.Configuration configuration, PaymentSheetResultCallback callback) {
+    new Handler(Looper.getMainLooper()).post(() -> {
+      if (paymentSheet == null) {
+        callback.onError("PaymentSheet not initialized");
+        return;
+      }
+      paymentSheet.presentWithPaymentIntent(clientSecret, configuration);
+    });
   }
 
   public interface PaymentSheetResultCallback {
-    void onPaymentResult(PaymentSheetResult result);
+    void onSuccess(PaymentSheetResult result);
+    void onError(String error);
   }
 }
