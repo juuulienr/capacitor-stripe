@@ -2,14 +2,14 @@ package com.swipelive.capacitor.stripe;
 
 import android.app.Activity;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.stripe.android.paymentsheet.PaymentSheet;
-
-import androidx.appcompat.app.AppCompatActivity;
 
 @CapacitorPlugin(name = "Stripe")
 public class StripePlugin extends Plugin {
@@ -35,8 +35,23 @@ public class StripePlugin extends Plugin {
     }
 
     AppCompatActivity appCompatActivity = (AppCompatActivity) activity;
-    stripe.initialize(appCompatActivity, publishableKey);
-    call.resolve(new JSObject().put("status", "initialized"));
+
+    stripe.initialize(appCompatActivity, publishableKey, new Stripe.PaymentSheetResultCallback() {
+      @Override
+      public void onSuccess() {
+        call.resolve(new JSObject().put("status", "initialized"));
+      }
+
+      @Override
+      public void onCancel() {
+        call.reject("Initialization canceled");
+      }
+
+      @Override
+      public void onError(String error) {
+        call.reject(error);
+      }
+    });
   }
 
   @PluginMethod
@@ -49,27 +64,11 @@ public class StripePlugin extends Plugin {
       return;
     }
 
-    PaymentSheet.Configuration configuration = new PaymentSheet.Configuration(merchantDisplayName);
+    PaymentSheet.Configuration configuration = new PaymentSheet.Configuration.Builder(merchantDisplayName)
+        .allowsDelayedPaymentMethods(true)
+        .build();
 
-    stripe.presentPaymentSheet(clientSecret, configuration, new Stripe.PaymentSheetResultCallback() {
-      @Override
-      public void onSuccess() {
-        JSObject response = new JSObject();
-        response.put("status", "completed");
-        call.resolve(response);
-      }
-
-      @Override
-      public void onCancel() {
-        JSObject response = new JSObject();
-        response.put("status", "canceled");
-        call.resolve(response);
-      }
-
-      @Override
-      public void onError(String error) {
-        call.reject("Payment failed: " + error);
-      }
-    });
+    stripe.presentPaymentSheet(clientSecret, configuration);
+    call.resolve(new JSObject().put("status", "PaymentSheet presented"));
   }
 }
