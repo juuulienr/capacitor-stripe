@@ -11,13 +11,12 @@ import com.stripe.android.paymentsheet.PaymentSheetResult;
 
 public class Stripe {
   private PaymentSheet paymentSheet;
+  private PaymentSheetResultCallback resultCallback;
 
   public void initialize(AppCompatActivity activity, String publishableKey) {
     new Handler(Looper.getMainLooper()).post(() -> {
       PaymentConfiguration.init(activity, publishableKey);
-      paymentSheet = new PaymentSheet(activity, result -> {
-        // Callback will be handled in the Plugin
-      });
+      paymentSheet = new PaymentSheet(activity, this::handlePaymentResult);
     });
   }
 
@@ -27,12 +26,25 @@ public class Stripe {
         callback.onError("PaymentSheet not initialized");
         return;
       }
+      this.resultCallback = callback;
       paymentSheet.presentWithPaymentIntent(clientSecret, configuration);
     });
   }
 
+  private void handlePaymentResult(PaymentSheetResult result) {
+    if (resultCallback == null) return;
+    if (result instanceof PaymentSheetResult.Completed) {
+      resultCallback.onSuccess();
+    } else if (result instanceof PaymentSheetResult.Canceled) {
+      resultCallback.onCancel();
+    } else if (result instanceof PaymentSheetResult.Failed) {
+      resultCallback.onError(((PaymentSheetResult.Failed) result).getError().toString());
+    }
+  }
+
   public interface PaymentSheetResultCallback {
-    void onSuccess(PaymentSheetResult result);
+    void onSuccess();
+    void onCancel();
     void onError(String error);
   }
 }

@@ -8,7 +8,6 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.stripe.android.paymentsheet.PaymentSheet;
-import com.stripe.android.paymentsheet.PaymentSheetResult;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -54,24 +53,22 @@ public class StripePlugin extends Plugin {
 
     stripe.presentPaymentSheet(clientSecret, configuration, new Stripe.PaymentSheetResultCallback() {
       @Override
-      public void onSuccess(PaymentSheetResult result) {
+      public void onSuccess() {
         JSObject response = new JSObject();
-        if (result instanceof PaymentSheetResult.Completed) {
-          response.put("status", "completed");
-          call.resolve(response);
-        } else if (result instanceof PaymentSheetResult.Canceled) {
-          response.put("status", "canceled");
-          call.resolve(response);
-        } else if (result instanceof PaymentSheetResult.Failed) {
-          response.put("status", "failed");
-          response.put("error", ((PaymentSheetResult.Failed) result).getError().toString());
-          call.reject("Payment failed", response);
-        }
+        response.put("status", "completed");
+        call.resolve(response);
+      }
+
+      @Override
+      public void onCancel() {
+        JSObject response = new JSObject();
+        response.put("status", "canceled");
+        call.resolve(response);
       }
 
       @Override
       public void onError(String error) {
-        call.reject(error);
+        call.reject("Payment failed: " + error);
       }
     });
   }
