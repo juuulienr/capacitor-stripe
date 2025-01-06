@@ -4,7 +4,7 @@ import androidx.activity.ComponentActivity;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
-import com.getcapacitor.annotation.PluginMethod;
+import com.getcapacitor.PluginMethod;
 import com.getcapacitor.JSObject;
 import com.stripe.android.PaymentConfiguration;
 
