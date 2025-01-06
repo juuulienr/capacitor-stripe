@@ -12,8 +12,8 @@ public class StripePlugin extends Plugin {
   private Stripe stripe;
 
   @Override
-  public void load() {
-    super.load();
+  public void initialize() {
+    super.initialize();
     String publishableKey = getConfig().getString("publishableKey");
     if (publishableKey != null) {
       PaymentConfiguration.init(getContext(), publishableKey);
@@ -22,7 +22,7 @@ public class StripePlugin extends Plugin {
   }
 
   @PluginMethod
-  public void presentPaymentSheet(PluginCall call) {
+  public void createPaymentSheet(PluginCall call) {
     String clientSecret = call.getString("clientSecret");
     String merchantDisplayName = call.getString("merchantDisplayName");
     String customerEphemeralKeySecret = call.getString("customerEphemeralKeySecret");
@@ -34,6 +34,6 @@ public class StripePlugin extends Plugin {
       return;
     }
 
-    stripe.presentPaymentSheet(clientSecret, merchantDisplayName, customerEphemeralKeySecret, customerId, countryCode);
+    stripe.createPaymentSheet(clientSecret, merchantDisplayName, customerEphemeralKeySecret, customerId, countryCode);
   }
 }

@@ -17,7 +17,7 @@ public class Stripe {
     this.currentCall = call;
   }
 
-  public void presentPaymentSheet(String clientSecret, String merchantDisplayName, String customerEphemeralKeySecret, String customerId, String countryCode) {
+  public void createPaymentSheet(String clientSecret, String merchantDisplayName, String customerEphemeralKeySecret, String customerId, String countryCode) {
     PaymentSheet.CustomerConfiguration customerConfig =
       new PaymentSheet.CustomerConfiguration(customerId, customerEphemeralKeySecret);
 
