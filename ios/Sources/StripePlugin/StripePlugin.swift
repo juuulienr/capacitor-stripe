@@ -29,37 +29,45 @@ public class StripePlugin: CAPPlugin, CAPBridgedPlugin {
   /**
    * Configure and present the Stripe Payment Sheet with custom parameters.
    */
-  @objc func createPaymentSheet(_ call: CAPPluginCall) {
-    guard let clientSecret = call.getString("clientSecret"),
-          let merchantDisplayName = call.getString("merchantDisplayName") else {
-      call.reject("Missing clientSecret or merchantDisplayName")
-      return
-    }
-
-    let appearance = call.getObject("appearance")
-    let paymentMethodLayout = call.getString("paymentMethodLayout")
-
-    DispatchQueue.main.async {
-      guard let viewController = self.bridge?.viewController else {
-        call.reject("Unable to access viewController")
+    @objc func createPaymentSheet(_ call: CAPPluginCall) {
+      guard let clientSecret = call.getString("clientSecret"),
+            let merchantDisplayName = call.getString("merchantDisplayName") else {
+        call.reject("Missing clientSecret or merchantDisplayName")
         return
       }
 
-      self.implementation.createPaymentSheet(
-        clientSecret: clientSecret,
-        merchantDisplayName: merchantDisplayName,
-        appearance: appearance,
-        paymentMethodLayout: paymentMethodLayout,
-        from: viewController
-      ) { status, errorMessage in
-        if status == "completed" {
-          call.resolve(["status": status])
-        } else if status == "failed" {
-          call.reject(errorMessage ?? "An unknown error occurred")
-        } else {
-          call.resolve(["status": status])
+      let appearance = call.getObject("appearance")
+      let paymentMethodLayout = call.getString("paymentMethodLayout")
+      let customerEphemeralKeySecret = call.getString("customerEphemeralKeySecret")
+      let customerId = call.getString("customerId")
+      let countryCode = call.getString("countryCode")
+      let applePayMerchantId = call.getString("applePayMerchantId")
+
+      DispatchQueue.main.async {
+        guard let viewController = self.bridge?.viewController else {
+          call.reject("Unable to access viewController")
+          return
+        }
+
+        self.implementation.createPaymentSheet(
+          clientSecret: clientSecret,
+          merchantDisplayName: merchantDisplayName,
+          customerEphemeralKeySecret: customerEphemeralKeySecret,
+          customerId: customerId,
+          countryCode: countryCode,
+          applePayMerchantId: applePayMerchantId,
+          appearance: appearance,
+          paymentMethodLayout: paymentMethodLayout,
+          from: viewController
+        ) { status, errorMessage in
+          if status == "completed" {
+            call.resolve(["status": status])
+          } else if status == "failed" {
+            call.reject(errorMessage ?? "An unknown error occurred")
+          } else {
+            call.resolve(["status": status])
+          }
         }
       }
     }
-  }
 }
