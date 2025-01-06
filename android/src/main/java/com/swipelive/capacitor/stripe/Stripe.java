@@ -15,7 +15,7 @@ public class Stripe {
 
   public Stripe(@NonNull Context context, PluginCall call) {
     this.paymentSheet = new PaymentSheet((Activity) context, this::onPaymentSheetResult);
-    this.currentCall = call;
+    this.currentCall = call; 
   }
 
   public void presentPaymentSheet(String clientSecret, String merchantDisplayName, String customerEphemeralKeySecret, String customerId, String countryCode, boolean googlePayEnabled) {
