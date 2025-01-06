@@ -1,57 +1,47 @@
 package com.swipelive.capacitor.stripe;
 
-import android.content.Context;
 import android.app.Activity;
+import androidx.activity.ComponentActivity;
 import androidx.annotation.NonNull;
 import com.getcapacitor.PluginCall;
 import com.stripe.android.PaymentConfiguration;
 import com.stripe.android.paymentsheet.PaymentSheet;
 import com.stripe.android.paymentsheet.PaymentSheetResult;
-import com.stripe.android.paymentsheet.model.PaymentSheetConfiguration;
 
 public class Stripe {
   private final PaymentSheet paymentSheet;
   private PluginCall currentCall;
 
-  public Stripe(@NonNull Context context, PluginCall call) {
-    this.paymentSheet = new PaymentSheet((Activity) context, this::onPaymentSheetResult);
-    this.currentCall = call; 
+  public Stripe(@NonNull ComponentActivity activity, PluginCall call) {
+    this.paymentSheet = new PaymentSheet(activity, this::onPaymentSheetResult);
+    this.currentCall = call;
   }
 
-  public void presentPaymentSheet(String clientSecret, String merchantDisplayName, String customerEphemeralKeySecret, String customerId, String countryCode, boolean googlePayEnabled) {
+  public void presentPaymentSheet(String clientSecret, String merchantDisplayName, String customerEphemeralKeySecret, String customerId, String countryCode) {
     PaymentSheet.CustomerConfiguration customerConfig =
       new PaymentSheet.CustomerConfiguration(customerId, customerEphemeralKeySecret);
 
-    PaymentSheetConfiguration.Builder configBuilder = new PaymentSheetConfiguration.Builder(merchantDisplayName)
-      .customer(customerConfig);
+    PaymentSheet.Configuration config = new PaymentSheet.Configuration(
+      merchantDisplayName,
+      customerConfig,
+      new PaymentSheet.GooglePayConfiguration(
+        PaymentSheet.GooglePayConfiguration.Environment.Test, countryCode
+      )
+    );
 
-    if (googlePayEnabled) {
-      configBuilder.googlePay(new PaymentSheet.GooglePayConfiguration(countryCode));
-    }
-
-    PaymentSheetConfiguration paymentSheetConfig = configBuilder.build();
-
-    paymentSheet.presentWithPaymentIntent(clientSecret, paymentSheetConfig);
+    paymentSheet.presentWithPaymentIntent(clientSecret, config);
   }
 
   private void onPaymentSheetResult(PaymentSheetResult paymentSheetResult) {
     if (currentCall == null) return;
 
-    JSObject result = new JSObject();
-    switch (paymentSheetResult) {
-      case PaymentSheetResult.Completed:
-        result.put("status", "success");
-        currentCall.resolve(result);
-        break;
-      case PaymentSheetResult.Canceled:
-        result.put("status", "canceled");
-        currentCall.reject("Payment canceled by user", result);
-        break;
-      case PaymentSheetResult.Failed:
-        result.put("status", "failed");
-        result.put("error", paymentSheetResult.getError().getMessage());
-        currentCall.reject("Payment failed", result);
-        break;
+    if (paymentSheetResult instanceof PaymentSheetResult.Completed) {
+      currentCall.resolve();
+    } else if (paymentSheetResult instanceof PaymentSheetResult.Canceled) {
+      currentCall.reject("Payment canceled by user");
+    } else if (paymentSheetResult instanceof PaymentSheetResult.Failed) {
+      PaymentSheetResult.Failed failedResult = (PaymentSheetResult.Failed) paymentSheetResult;
+      currentCall.reject("Payment failed", failedResult.getError().getMessage());
     }
   }
 }

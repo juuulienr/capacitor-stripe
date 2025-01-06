@@ -1,9 +1,9 @@
 package com.swipelive.capacitor.stripe;
 
+import androidx.activity.ComponentActivity;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
-import com.getcapacitor.JSObject;
 import com.stripe.android.PaymentConfiguration;
 
 @CapacitorPlugin(name = "Stripe")
@@ -18,7 +18,7 @@ public class StripePlugin extends Plugin {
     if (publishableKey != null) {
       PaymentConfiguration.init(getContext(), publishableKey);
     }
-    stripe = new Stripe(getContext(), null);
+    stripe = new Stripe((ComponentActivity) getActivity(), null);
   }
 
   @PluginMethod
@@ -28,13 +28,12 @@ public class StripePlugin extends Plugin {
     String customerEphemeralKeySecret = call.getString("customerEphemeralKeySecret");
     String customerId = call.getString("customerId");
     String countryCode = call.getString("countryCode");
-    boolean googlePayEnabled = call.getBoolean("googlePayEnabled", false);
 
     if (clientSecret == null || merchantDisplayName == null || customerEphemeralKeySecret == null || customerId == null || countryCode == null) {
       call.reject("Missing required parameters");
       return;
     }
 
-    stripe.presentPaymentSheet(clientSecret, merchantDisplayName, customerEphemeralKeySecret, customerId, countryCode, googlePayEnabled);
+    stripe.presentPaymentSheet(clientSecret, merchantDisplayName, customerEphemeralKeySecret, customerId, countryCode);
   }
 }
