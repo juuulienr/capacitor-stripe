@@ -4,6 +4,7 @@ import android.app.Activity;
 import androidx.activity.ComponentActivity;
 import androidx.annotation.NonNull;
 import com.getcapacitor.PluginCall;
+import com.getcapacitor.JSObject;
 import com.stripe.android.PaymentConfiguration;
 import com.stripe.android.paymentsheet.PaymentSheet;
 import com.stripe.android.paymentsheet.PaymentSheetResult;
@@ -35,13 +36,18 @@ public class Stripe {
   private void onPaymentSheetResult(PaymentSheetResult paymentSheetResult) {
     if (currentCall == null) return;
 
+    JSObject result = new JSObject();
     if (paymentSheetResult instanceof PaymentSheetResult.Completed) {
-      currentCall.resolve();
+      result.put("status", "completed");
+      currentCall.resolve(result);
     } else if (paymentSheetResult instanceof PaymentSheetResult.Canceled) {
-      currentCall.reject("Payment canceled by user");
+      result.put("status", "canceled");
+      currentCall.resolve(result);
     } else if (paymentSheetResult instanceof PaymentSheetResult.Failed) {
       PaymentSheetResult.Failed failedResult = (PaymentSheetResult.Failed) paymentSheetResult;
-      currentCall.reject("Payment failed", failedResult.getError().getMessage());
+      result.put("status", "failed");
+      result.put("error", failedResult.getError().getMessage());
+      currentCall.resolve(result);
     }
   }
 }

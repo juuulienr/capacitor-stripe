@@ -4,6 +4,8 @@ import androidx.activity.ComponentActivity;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
+import com.getcapacitor.annotation.PluginMethod;
+import com.getcapacitor.JSObject;
 import com.stripe.android.PaymentConfiguration;
 
 @CapacitorPlugin(name = "Stripe")
@@ -12,13 +14,25 @@ public class StripePlugin extends Plugin {
   private Stripe stripe;
 
   @Override
-  public void initialize() {
-    super.initialize();
+  public void load() {
+    super.load();
     String publishableKey = getConfig().getString("publishableKey");
     if (publishableKey != null) {
       PaymentConfiguration.init(getContext(), publishableKey);
     }
     stripe = new Stripe((ComponentActivity) getActivity(), null);
+  }
+
+  @PluginMethod
+  public void initialize(PluginCall call) {
+    String publishableKey = call.getString("publishableKey");
+    if (publishableKey == null) {
+      call.reject("Missing publishableKey");
+      return;
+    }
+
+    PaymentConfiguration.init(getContext(), publishableKey);
+    call.resolve();
   }
 
   @PluginMethod
