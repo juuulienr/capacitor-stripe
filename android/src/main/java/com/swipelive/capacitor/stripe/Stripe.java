@@ -1,5 +1,6 @@
 package com.swipelive.capacitor.stripe;
 
+import android.content.Intent;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
@@ -11,7 +12,8 @@ import com.stripe.android.paymentsheet.PaymentSheetResult;
 public class Stripe {
   private PaymentSheet paymentSheet;
   private PaymentSheetResultCallback resultCallback;
-  private ActivityResultLauncher<PaymentSheet.IntentConfiguration> paymentLauncher;
+
+  private ActivityResultLauncher<Intent> paymentLauncher;
 
   public void initialize(AppCompatActivity activity, String publishableKey, PaymentSheetResultCallback callback) {
     PaymentConfiguration.init(activity, publishableKey);
@@ -20,15 +22,10 @@ public class Stripe {
     paymentLauncher = activity.registerForActivityResult(
         new ActivityResultContracts.StartActivityForResult(),
         result -> {
-          if (paymentSheet == null) {
-            resultCallback.onError("PaymentSheet not initialized");
-            return;
-          }
-
-          if (result.getResultCode() == AppCompatActivity.RESULT_OK && result.getData() != null) {
+          if (paymentSheet != null) {
             paymentSheet.onPaymentSheetResult(result.getData());
           } else {
-            resultCallback.onError("Payment canceled or failed");
+            resultCallback.onError("PaymentSheet not initialized");
           }
         }
     );
@@ -42,8 +39,7 @@ public class Stripe {
       return;
     }
 
-    PaymentSheet.IntentConfiguration intentConfig = new PaymentSheet.IntentConfiguration(clientSecret, configuration);
-    paymentLauncher.launch(intentConfig);
+    paymentSheet.presentWithPaymentIntent(clientSecret, configuration);
   }
 
   private void onPaymentSheetResult(PaymentSheetResult result) {
