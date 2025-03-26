@@ -1,57 +1,118 @@
 # @swipelive/capacitor-stripe
 
-Capacitor plugin for integrating Stripe
+Plugin Capacitor pour l'intégration de Stripe dans vos applications mobiles. Ce plugin permet d'implémenter facilement des paiements sécurisés via Stripe Payment Sheet dans vos applications iOS et Android.
 
-## Install
+## 📋 Prérequis
+
+- Capacitor 5.0 ou supérieur
+- Un compte Stripe avec une clé publique valide
+- iOS 13.0 ou supérieur
+- Android API level 21 ou supérieur
+
+## 💻 Installation
 
 ```bash
 npm install @swipelive/capacitor-stripe
 npx cap sync
 ```
 
-## API
+## 🔑 Configuration
 
-<docgen-index>
+### Android
 
-* [`initialize(...)`](#initialize)
-* [`createPaymentSheet(...)`](#createpaymentsheet)
+Aucune configuration supplémentaire n'est nécessaire pour Android.
 
-</docgen-index>
+### iOS
 
-<docgen-api>
-<!--Update the source file JSDoc comments and rerun docgen to update the docs below-->
+Aucune configuration supplémentaire n'est nécessaire pour iOS.
 
-### initialize(...)
+## 📚 API
 
-```typescript
-initialize(options: { publishableKey: string; }) => Promise<{ status: string; }>
-```
-
-Initialize the Stripe plugin with a publishable key.
-
-| Param         | Type                                     | Description                              |
-| ------------- | ---------------------------------------- | ---------------------------------------- |
-| **`options`** | <code>{ publishableKey: string; }</code> | - Object containing the publishable key. |
-
-**Returns:** <code>Promise&lt;{ status: string; }&gt;</code>
-
---------------------
-
-
-### createPaymentSheet(...)
+### Initialisation
 
 ```typescript
-createPaymentSheet(options: { clientSecret: string; merchantDisplayName: string; appearance?: { colors?: { primary?: string; background?: string; componentBackground?: string; componentBorder?: string; primaryText?: string; secondaryText?: string; }; shapes?: { cornerRadius?: number; }; fonts?: { base?: string; heading?: string; }; }; paymentMethodLayout?: 'horizontal' | 'vertical' | 'auto'; }) => Promise<{ status: 'completed' | 'canceled' | 'failed'; }>
+initialize({ publishableKey: string }): Promise<{ status: string }>
+```
+Initialise le SDK Stripe avec votre clé publique.
+
+### Payment Sheet
+
+```typescript
+createPaymentSheet({
+  clientSecret: string,
+  merchantDisplayName: string,
+  appearance?: {
+    colors?: {
+      primary?: string,
+      background?: string,
+      componentBackground?: string,
+      componentBorder?: string,
+      primaryText?: string,
+      secondaryText?: string
+    },
+    shapes?: {
+      cornerRadius?: number
+    }
+  },
+  paymentMethodLayout?: 'horizontal' | 'vertical' | 'auto'
+}): Promise<{ status: 'completed' | 'canceled' | 'failed' }>
 ```
 
-Present the Stripe Payment Sheet to the user.
+## 🚀 Exemple d'utilisation
 
-| Param         | Type                                                                                                                                                                                                                                                                                                                                                                                            | Description                                                            |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| **`options`** | <code>{ clientSecret: string; merchantDisplayName: string; appearance?: { colors?: { primary?: string; background?: string; componentBackground?: string; componentBorder?: string; primaryText?: string; secondaryText?: string; }; shapes?: { cornerRadius?: number; }; fonts?: { base?: string; heading?: string; }; }; paymentMethodLayout?: 'horizontal' \| 'vertical' \| 'auto'; }</code> | - Object containing the client secret and other configuration options. |
+```typescript
+import { StripePlugin } from '@swipelive/capacitor-stripe';
 
-**Returns:** <code>Promise&lt;{ status: 'completed' | 'canceled' | 'failed'; }&gt;</code>
+// Initialisation
+await StripePlugin.initialize({
+  publishableKey: 'VOTRE_CLE_PUBLIQUE'
+});
 
---------------------
+// Présenter le Payment Sheet
+const result = await StripePlugin.createPaymentSheet({
+  clientSecret: 'VOTRE_CLIENT_SECRET',
+  merchantDisplayName: 'Votre Boutique',
+  appearance: {
+    colors: {
+      primary: '#007AFF',
+      background: '#FFFFFF',
+      componentBackground: '#F8F9FA',
+      componentBorder: '#E9ECEF',
+      primaryText: '#212529',
+      secondaryText: '#6C757D'
+    },
+    shapes: {
+      cornerRadius: 8
+    }
+  },
+  paymentMethodLayout: 'auto'
+});
 
-</docgen-api>
+// Gérer le résultat
+switch (result.status) {
+  case 'completed':
+    console.log('Paiement réussi');
+    break;
+  case 'canceled':
+    console.log('Paiement annulé');
+    break;
+  case 'failed':
+    console.log('Échec du paiement');
+    break;
+}
+```
+
+## 📝 Notes
+
+- Assurez-vous d'avoir configuré correctement votre compte Stripe
+- Utilisez toujours HTTPS pour la sécurité des transactions
+- Testez vos paiements en mode test avant de passer en production
+- Gérez correctement les erreurs et les cas d'annulation
+
+## 🤝 Contribution
+
+Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une issue ou une pull request.
+
+## 📄 Licence
+
+MIT
