@@ -109,9 +109,6 @@ switch (result.status) {
 - Testez vos paiements en mode test avant de passer en production
 - Gérez correctement les erreurs et les cas d'annulation
 
-## 🤝 Contribution
-
-Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une issue ou une pull request.
 
 ## 📄 Licence
 
